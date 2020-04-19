@@ -8,7 +8,7 @@ This project is inspired by the Arduino [ModbusMaster][] library by 4-20ma.
 
 ## API
 
-### `ModbusMaster(EventQueue* queue, Serial* serial, int baud, uint8_t slaveID, int timeout = 50)`
+#### `ModbusMaster(EventQueue* queue, Serial* serial, int baud, uint8_t slaveID, int timeout = 50)`
 
 Create new Modbus Master.
 
@@ -19,33 +19,33 @@ Params:
 - `slaveID`: Modbus Slave ID
 - `timeout`: Modbus response timeout (ms)
 
-### `void attachPreTransmission(Callback<void()> f)`
+#### `void attachPreTransmission(Callback<void()> f)`
 
-### `void attachPostTransmission(Callback<void()> f)`
+#### `void attachPostTransmission(Callback<void()> f)`
 
-### `void setSlaveID(uint8_t id)`
+#### `void setSlaveID(uint8_t id)`
 
-### `void setTimeout(int t)`
+#### `void setTimeout(int t)`
 
-### `uint8_t* getCoils()`
+#### `uint8_t* getCoils()`
 
-### `uint16_t* getRegisters()`
+#### `uint16_t* getRegisters()`
 
-### `void readCoils(uint16_t addr, uint16_t num, Callback<void(Status)> cb = NULL)`
+#### `void readCoils(uint16_t addr, uint16_t num, Callback<void(Status)> cb = NULL)`
 
-### `void readDiscreteInputs(uint16_t addr, uint16_t num, Callback<void(Status)> cb = NULL)`
+#### `void readDiscreteInputs(uint16_t addr, uint16_t num, Callback<void(Status)> cb = NULL)`
 
-### `void writeSingleCoil(uint16_t addr, bool val, Callback<void(Status)> cb = NULL)`
+#### `void writeSingleCoil(uint16_t addr, bool val, Callback<void(Status)> cb = NULL)`
 
-### `void writeMultipleCoils(uint16_t addr, uint16_t num, uint8_t* val, Callback<void(Status)> cb = NULL)`
+#### `void writeMultipleCoils(uint16_t addr, uint16_t num, uint8_t* val, Callback<void(Status)> cb = NULL)`
 
-### `void readHoldingRegisters(uint16_t addr, uint16_t num, Callback<void(Status)> cb = NULL)`
+#### `void readHoldingRegisters(uint16_t addr, uint16_t num, Callback<void(Status)> cb = NULL)`
 
-### `void readInputRegisters(uint16_t addr, uint8_t num, Callback<void(Status)> cb = NULL)`
+#### `void readInputRegisters(uint16_t addr, uint8_t num, Callback<void(Status)> cb = NULL)`
 
-### `void writeSingleRegister(uint16_t addr, uint16_t val, Callback<void(Status)> cb = NULL)`
+#### `void writeSingleRegister(uint16_t addr, uint16_t val, Callback<void(Status)> cb = NULL)`
 
-### `void writeMultipleRegisters(uint16_t addr, uint16_t num, uint16_t* val, Callback<void(Status)> cb = NULL)`
+#### `void writeMultipleRegisters(uint16_t addr, uint16_t num, uint16_t* val, Callback<void(Status)> cb = NULL)`
 
 ## Example
 
