@@ -58,7 +58,16 @@ class ModbusMaster {
         int receiveTimeoutID = 0;
         Function reqFunction = Function::none;
         
-        ModbusMaster(EventQueue* queue, Serial* serial, int baud, uint8_t slaveID, int timeout);
+        ModbusMaster(EventQueue* queue, Serial* serial, int baud, uint8_t slaveID, int timeout = 50):
+            queue(queue),
+            serial(serial),
+            slaveID(slaveID),
+            rxTimeout(timeout),
+            crc16(MbedCRC<POLY_16BIT_IBM, 16>(0xFFFF, 0, false, false)),
+            frameTimeout(Timeout()),
+            frameDelimTime((35 * 1000 * 1000) / baud) {
+                serial->baud(baud);
+            }
 
         void attachPreTransmission(Callback<void()> f) { preTransmission = f; };
         void attachPostTransmission(Callback<void()> f) { postTransmission = f; };
@@ -78,12 +87,15 @@ class ModbusMaster {
         void writeMultipleRegisters(uint16_t addr, uint16_t num, uint16_t* val, CB cb);
 
         void transaction(Function func, uint16_t addr, uint16_t num, uint8_t* val);
-        
-        void writeUInt16(uint16_t val);
-        void txCompleteHandler();
         void rxHandler();
         void rxCompleteHandler();
         void rxTimeoutHandler();
+        
+        void writeUInt16(uint16_t val) {
+            adu[txLen++] = val >> 8;
+            adu[txLen++] = val;
+        }
+
 };
 
 #endif

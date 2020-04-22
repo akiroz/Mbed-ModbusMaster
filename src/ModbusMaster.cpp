@@ -4,51 +4,30 @@ typedef ModbusMaster M;
 typedef M::Function F;
 typedef M::Status S;
 
-M::ModbusMaster(EventQueue* queue, Serial* serial, int baud, uint8_t slaveID, int timeout = 50):
-    queue(queue),
-    serial(serial),
-    slaveID(slaveID),
-    rxTimeout(timeout),
-    crc16(MbedCRC<POLY_16BIT_IBM, 16>(0xFFFF, 0, false, false)),
-    frameTimeout(Timeout()),
-    frameDelimTime((35 * 1000 * 1000) / baud)
-{
-    serial->baud(baud);
-}
-
-void M::writeUInt16(uint16_t val) {
-    adu[txLen++] = val >> 8;
-    adu[txLen++] = val;
-}
-
-void M::txCompleteHandler() {
-    if(postTransmission) postTransmission();
-}
-
 void M::rxCompleteHandler() {
     if(receiveTimeoutID != 0) queue->cancel(receiveTimeoutID);
     serial->attach(NULL);
     if(rxLen < 4) {
-        if(complete) complete(S::invalidCRC);
+        complete(S::invalidCRC);
         return;
     }
     uint32_t compCRC = 0;
     crc16.compute(adu, rxLen - 2, &compCRC);
     uint16_t recvCRC = adu[rxLen - 2] | (adu[rxLen - 1] << 8);
     if(recvCRC != compCRC) {
-        if(complete) complete(S::invalidCRC);
+        complete(S::invalidCRC);
         return;
     }
     if(adu[0] != slaveID) {
-        if(complete) complete(S::invalidSlaveID);
+        complete(S::invalidSlaveID);
         return;
     }
     if(static_cast<F>(adu[1] & 0x7F) != reqFunction) {
-        if(complete) complete(S::invalidFunction);
+        complete(S::invalidFunction);
         return;
     }
     if(adu[1] & 0x80) { // Exception
-        if(complete) complete(static_cast<S>(adu[2]));
+        complete(static_cast<S>(adu[2]));
         return;
     }
     switch(reqFunction) {
@@ -58,7 +37,7 @@ void M::rxCompleteHandler() {
             uint8_t regCount = (rxLen - 5) / 2;
             for(int i = 0; i < regCount; i++) reg[i] = __builtin_bswap16(reg[i]);
     }
-    if(complete) complete(S::success);
+    complete(S::success);
 }
 
 void M::rxHandler() {
@@ -66,16 +45,14 @@ void M::rxHandler() {
         if(rxLen >= 255) rxLen = 0; // prevent buffer overflow
         adu[rxLen++] = serial->getc();
     }
-    auto that = this;
-    frameTimeout.attach_us([that](){
-        that->rxCompleteHandler();
-    }, frameDelimTime);
+    frameTimeout.attach_us([this](){ rxCompleteHandler(); }, frameDelimTime);
 }
 
 void M::rxTimeoutHandler() {
-    frameTimeout.detach();
     serial->attach(NULL);
-    if(complete) complete(S::responseTimeout);
+    serial->abort_write();
+    frameTimeout.detach();
+    complete(S::responseTimeout);
 }
 
 void M::transaction(F func, uint16_t addr, uint16_t num, uint8_t* val) {
@@ -119,16 +96,11 @@ void M::transaction(F func, uint16_t addr, uint16_t num, uint8_t* val) {
 
     // Send Request
     if(preTransmission) preTransmission();
-    auto that = this;
-    serial->write(adu, txLen, [that](int e){
-        that->txCompleteHandler();
+    int ret = serial->write(adu, txLen, [this](int e){
+        if(postTransmission) postTransmission();
+        serial->attach([this](){ rxHandler(); });
     });
-    serial->attach([that](){
-        that->rxHandler();
-    });
-    receiveTimeoutID = queue->call_in(rxTimeout, [that](){
-        that->rxTimeoutHandler();
-    });
+    receiveTimeoutID = queue->call_in(rxTimeout, [this](){ rxTimeoutHandler(); });
 }
 
 // Modbus Functions ===================================================================
