@@ -4,6 +4,16 @@ typedef ModbusMaster M;
 typedef M::Function F;
 typedef M::Status S;
 
+void M::rxHandler() {
+    while(serial->readable()) {
+        if(rxLen >= 255) rxLen = 0; // prevent buffer overflow
+        adu[rxLen++] = serial->getc();
+    }
+    frameTimeout.attach_us([this](){
+        queue->call([this](){ rxCompleteHandler(); });
+    }, frameDelimTime);
+}
+
 void M::rxCompleteHandler() {
     if(receiveTimeoutID != 0) queue->cancel(receiveTimeoutID);
     serial->attach(NULL);
@@ -40,18 +50,9 @@ void M::rxCompleteHandler() {
     complete(S::success);
 }
 
-void M::rxHandler() {
-    while(serial->readable()) {
-        if(rxLen >= 255) rxLen = 0; // prevent buffer overflow
-        adu[rxLen++] = serial->getc();
-    }
-    frameTimeout.attach_us([this](){ rxCompleteHandler(); }, frameDelimTime);
-}
-
 void M::rxTimeoutHandler() {
-    serial->attach(NULL);
-    serial->abort_write();
     frameTimeout.detach();
+    serial->attach(NULL);
     complete(S::responseTimeout);
 }
 
@@ -96,11 +97,11 @@ void M::transaction(F func, uint16_t addr, uint16_t num, uint8_t* val) {
 
     // Send Request
     if(preTransmission) preTransmission();
-    int ret = serial->write(adu, txLen, [this](int e){
+    serial->write(adu, txLen, [this](int e){
         if(postTransmission) postTransmission();
         serial->attach([this](){ rxHandler(); });
+        receiveTimeoutID = queue->call_in(rxTimeout, [this](){ rxTimeoutHandler(); });
     });
-    receiveTimeoutID = queue->call_in(rxTimeout, [this](){ rxTimeoutHandler(); });
 }
 
 // Modbus Functions ===================================================================

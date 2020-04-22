@@ -95,7 +95,6 @@ class ModbusMaster {
             adu[txLen++] = val >> 8;
             adu[txLen++] = val;
         }
-
 };
 
 #endif
