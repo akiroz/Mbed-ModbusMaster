@@ -45,21 +45,21 @@ First result is on first byte LSB.
 Get register result after `readHoldingRegisters` or `readInputRegisters`.
 Registers values are converted to little-endien.
 
-#### `void readCoils(uint16_t addr, uint16_t num, Callback<void(Status)> cb = NULL)`
+#### `void readCoils(uint16_t addr, uint16_t num, Callback<void(Status)>)`
 
-#### `void readDiscreteInputs(uint16_t addr, uint16_t num, Callback<void(Status)> cb = NULL)`
+#### `void readDiscreteInputs(uint16_t addr, uint16_t num, Callback<void(Status)>)`
 
-#### `void writeSingleCoil(uint16_t addr, bool val, Callback<void(Status)> cb = NULL)`
+#### `void writeSingleCoil(uint16_t addr, bool val, Callback<void(Status)>)`
 
-#### `void writeMultipleCoils(uint16_t addr, uint16_t num, uint8_t* val, Callback<void(Status)> cb = NULL)`
+#### `void writeMultipleCoils(uint16_t addr, uint16_t num, uint8_t* val, Callback<void(Status)>)`
 
-#### `void readHoldingRegisters(uint16_t addr, uint16_t num, Callback<void(Status)> cb = NULL)`
+#### `void readHoldingRegisters(uint16_t addr, uint16_t num, Callback<void(Status)>)`
 
-#### `void readInputRegisters(uint16_t addr, uint8_t num, Callback<void(Status)> cb = NULL)`
+#### `void readInputRegisters(uint16_t addr, uint8_t num, Callback<void(Status)>)`
 
-#### `void writeSingleRegister(uint16_t addr, uint16_t val, Callback<void(Status)> cb = NULL)`
+#### `void writeSingleRegister(uint16_t addr, uint16_t val, Callback<void(Status)>)`
 
-#### `void writeMultipleRegisters(uint16_t addr, uint16_t num, uint16_t* val, Callback<void(Status)> cb = NULL)`
+#### `void writeMultipleRegisters(uint16_t addr, uint16_t num, uint16_t* val, Callback<void(Status)>)`
 
 ## Example
 
