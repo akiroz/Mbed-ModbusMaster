@@ -19,13 +19,20 @@ Params:
 - `uin8_t slaveID`: Modbus Slave ID
 - `int timeout = 50`: Modbus response timeout (ms)
 
-#### `void attachPreTransmission(Callback<void()> f)`
+#### `void attachPreTransmit(Callback<void()> f)`
 
 Attach callback to be called before transmit. Can be used to toggle RS485 direction.
 
-#### `void attachPostTransmission(Callback<void()> f)`
+#### `void attachPostTransmit(Callback<void()> f)`
 
 Attach callback to be called after transmit. Can be used to toggle RS485 direction.
+
+#### `void attachPostReceive(Callback<uint16_t(uint8_t* data, uint16_t len)> f)`
+
+Attach callback to be called after receive frame, before CRC calculation.
+Can be used to modify received frame to workaround slave device quirks.
+
+Callback function must return the buffer length.
 
 #### `void setSlaveID(uint8_t id)`
 
@@ -47,19 +54,35 @@ Registers values are converted to little-endien.
 
 #### `void readCoils(uint16_t addr, uint16_t num, Callback<void(Status)>)`
 
+Modbus Read Coils function.
+
 #### `void readDiscreteInputs(uint16_t addr, uint16_t num, Callback<void(Status)>)`
+
+Modbus Read Discrete Inputs function.
 
 #### `void writeSingleCoil(uint16_t addr, bool val, Callback<void(Status)>)`
 
+Modbus Write Single Coils function.
+
 #### `void writeMultipleCoils(uint16_t addr, uint16_t num, uint8_t* val, Callback<void(Status)>)`
+
+Modbus Write Multiple Coils function.
 
 #### `void readHoldingRegisters(uint16_t addr, uint16_t num, Callback<void(Status)>)`
 
+Modbus Read Holding Registers function.
+
 #### `void readInputRegisters(uint16_t addr, uint8_t num, Callback<void(Status)>)`
+
+Modbus Read Input Registers function.
 
 #### `void writeSingleRegister(uint16_t addr, uint16_t val, Callback<void(Status)>)`
 
+Modbus Write Single Register function.
+
 #### `void writeMultipleRegisters(uint16_t addr, uint16_t num, uint16_t* val, Callback<void(Status)>)`
+
+Modbus Write Multiple Registers function.
 
 ## Example
 
