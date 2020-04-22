@@ -8,28 +8,42 @@ This project is inspired by the Arduino [ModbusMaster][] library by 4-20ma.
 
 ## API
 
-#### `ModbusMaster(EventQueue* queue, Serial* serial, int baud, uint8_t slaveID, int timeout = 50)`
+#### `ModbusMaster()`
 
 Create new Modbus Master.
 
 Params:
-- `queue`: EventQueue used for processing response off IRQ context
-- `serial`: Serial hardware to use for Modbus
-- `baud`: Serial baud rate used for Modbus frame delimiting
-- `slaveID`: Modbus Slave ID
-- `timeout`: Modbus response timeout (ms)
+- `EventQueue* queue`: EventQueue used for processing response off IRQ context
+- `Serial* serial`: Serial hardware to use for Modbus
+- `int baud`: Serial baud rate used for Modbus frame delimiting
+- `uin8_t slaveID`: Modbus Slave ID
+- `int timeout = 50`: Modbus response timeout (ms)
 
 #### `void attachPreTransmission(Callback<void()> f)`
 
+Attach callback to be called before transmit. Can be used to toggle RS485 direction.
+
 #### `void attachPostTransmission(Callback<void()> f)`
+
+Attach callback to be called after transmit. Can be used to toggle RS485 direction.
 
 #### `void setSlaveID(uint8_t id)`
 
+Change modbus slave ID for subsiquent requests.
+
 #### `void setTimeout(int t)`
+
+Chnage receive timeout for subsiquent requests.
 
 #### `uint8_t* getCoils()`
 
+Get coils result after `readCoils` or `readDiscreteInputs`.
+First result is on first byte LSB.
+
 #### `uint16_t* getRegisters()`
+
+Get register result after `readHoldingRegisters` or `readInputRegisters`.
+Registers values are converted to little-endien.
 
 #### `void readCoils(uint16_t addr, uint16_t num, Callback<void(Status)> cb = NULL)`
 
