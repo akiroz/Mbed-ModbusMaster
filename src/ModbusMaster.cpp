@@ -17,6 +17,9 @@ void M::rxHandler() {
 void M::rxCompleteHandler() {
     if(receiveTimeoutID != 0) queue->cancel(receiveTimeoutID);
     serial->attach(NULL);
+
+    if(postReceive) rxLen = postReceive(adu, rxLen);
+
     if(rxLen < 4) {
         complete(S::invalidCRC);
         return;
@@ -56,11 +59,12 @@ void M::rxTimeoutHandler() {
     complete(S::responseTimeout);
 }
 
-void M::transaction(F func, uint16_t addr, uint16_t num, uint8_t* val) {
+void M::transaction(F func, uint16_t addr, uint16_t num, uint8_t* val, Callback<void(M::Status)> cb) {
     txLen = 0;
     rxLen = 0;
     receiveTimeoutID = 0;
     reqFunction = func;
+    complete = cb;
     while(serial->readable()) serial->getc();
 
     // Build Request
@@ -94,11 +98,15 @@ void M::transaction(F func, uint16_t addr, uint16_t num, uint8_t* val) {
             break;
     }
     for(int i = 0; i < payloadLen; i++) adu[txLen++] = val[i];
+    uint32_t crc = 0;
+    crc16.compute(adu, txLen, &crc);
+    adu[txLen++] = crc;
+    adu[txLen++] = crc >> 8;
 
     // Send Request
-    if(preTransmission) preTransmission();
+    if(preTransmit) preTransmit();
     serial->write(adu, txLen, [this](int e){
-        if(postTransmission) postTransmission();
+        if(postTransmit) postTransmit();
         serial->attach([this](){ rxHandler(); });
         receiveTimeoutID = queue->call_in(rxTimeout, [this](){ rxTimeoutHandler(); });
     });
@@ -107,46 +115,38 @@ void M::transaction(F func, uint16_t addr, uint16_t num, uint8_t* val) {
 // Modbus Functions ===================================================================
 
 void M::readCoils(uint16_t addr, uint16_t num, Callback<void(M::Status)> cb) {
-    complete = cb;
-    transaction(F::readCoils, addr, num, NULL);
+    transaction(F::readCoils, addr, num, NULL, cb);
 }
 
 void M::readDiscreteInputs(uint16_t addr, uint16_t num, Callback<void(M::Status)> cb) {
-    complete = cb;
-    transaction(F::readDiscreteInputs, addr, num, NULL);
+    transaction(F::readDiscreteInputs, addr, num, NULL, cb);
 }
 
 void M::writeSingleCoil(uint16_t addr, bool val, Callback<void(M::Status)> cb) {
-    complete = cb;
     uint16_t payload = __builtin_bswap16(val ? 0xFF00 : 0x0000);
-    transaction(F::writeSingleCoil, addr, 1, reinterpret_cast<uint8_t*>(&payload));
+    transaction(F::writeSingleCoil, addr, 1, reinterpret_cast<uint8_t*>(&payload), cb);
 }
 
 void M::writeMultipleCoils(uint16_t addr, uint16_t num, uint8_t* val, Callback<void(M::Status)> cb) {
-    complete = cb;
-    transaction(F::writeMultipleCoils, addr, num, val);
+    transaction(F::writeMultipleCoils, addr, num, val, cb);
 }
 
 void M::readHoldingRegisters(uint16_t addr, uint16_t num, Callback<void(M::Status)> cb) {
-    complete = cb;
-    transaction(F::readHoldingRegisters, addr, num, NULL);
+    transaction(F::readHoldingRegisters, addr, num, NULL, cb);
 }
 
 void M::readInputRegisters(uint16_t addr, uint16_t num, Callback<void(M::Status)> cb) {
-    complete = cb;
-    transaction(F::readInputRegisters, addr, num, NULL);
+    transaction(F::readInputRegisters, addr, num, NULL, cb);
 }
 
 void M::writeSingleRegister(uint16_t addr, uint16_t val, Callback<void(M::Status)> cb) {
-    complete = cb;
     val = __builtin_bswap16(val);
     uint8_t* payload = reinterpret_cast<uint8_t*>(&val);
-    transaction(F::writeSingleRegister, addr, 1, payload);
+    transaction(F::writeSingleRegister, addr, 1, payload, cb);
 }
 
 void M::writeMultipleRegisters(uint16_t addr, uint16_t num, uint16_t* val, Callback<void(M::Status)> cb) {
-    complete = cb;
     for(int i = 0; i < num; i++) val[i] = __builtin_bswap16(val[i]);
     uint8_t* payload = reinterpret_cast<uint8_t*>(&val);
-    transaction(F::writeMultipleRegisters, addr, num, payload);
+    transaction(F::writeMultipleRegisters, addr, num, payload, cb);
 }

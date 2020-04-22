@@ -48,8 +48,9 @@ class ModbusMaster {
         MbedCRC<POLY_16BIT_IBM, 16> crc16;
         Timeout frameTimeout;
         us_timestamp_t frameDelimTime;
-        Callback<void()> preTransmission = NULL;
-        Callback<void()> postTransmission = NULL;
+        Callback<void()> preTransmit = NULL;
+        Callback<void()> postTransmit = NULL;
+        Callback<uint16_t(uint8_t* adu, uint16_t len)> postReceive = NULL;
         Callback<void(Status)> complete = NULL;
         
         uint8_t adu[256];
@@ -63,14 +64,15 @@ class ModbusMaster {
             serial(serial),
             slaveID(slaveID),
             rxTimeout(timeout),
-            crc16(MbedCRC<POLY_16BIT_IBM, 16>(0xFFFF, 0, false, false)),
+            crc16(MbedCRC<POLY_16BIT_IBM, 16>(0xFFFF, 0x0000, true, true)),
             frameTimeout(Timeout()),
             frameDelimTime((35 * 1000 * 1000) / baud) {
                 serial->baud(baud);
             }
 
-        void attachPreTransmission(Callback<void()> f) { preTransmission = f; };
-        void attachPostTransmission(Callback<void()> f) { postTransmission = f; };
+        void attachPreTransmit(Callback<void()> f) { preTransmit = f; };
+        void attachPostTransmit(Callback<void()> f) { postTransmit = f; };
+        void attachPostReceive(Callback<uint16_t(uint8_t* adu, uint16_t len)> f) { postReceive = f; };
         void setSlaveID(uint8_t id) { slaveID = id; };
         void setTimeout(int t) { rxTimeout = t; };
         uint8_t* getCoils() { return static_cast<uint8_t*>(adu + 3); };
@@ -86,7 +88,7 @@ class ModbusMaster {
         void writeSingleRegister(uint16_t addr, uint16_t val, CB cb);
         void writeMultipleRegisters(uint16_t addr, uint16_t num, uint16_t* val, CB cb);
 
-        void transaction(Function func, uint16_t addr, uint16_t num, uint8_t* val);
+        void transaction(Function func, uint16_t addr, uint16_t num, uint8_t* val, CB cb);
         void rxHandler();
         void rxCompleteHandler();
         void rxTimeoutHandler();
