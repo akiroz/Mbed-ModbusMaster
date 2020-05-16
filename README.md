@@ -87,7 +87,7 @@ Modbus Write Multiple Registers function.
 ## Example
 
 Read registers:
-```
+```cpp
 EventQueue queue(32 * EVENTS_EVENT_SIZE);
 Serial serial(PA_2, PA_3);
 ModbusMaster modbus(&queue, &serial, 115200, 1, 100);
