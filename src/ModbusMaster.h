@@ -6,7 +6,7 @@
 #include "mbed.h"
 
 struct ModbusMaster {
-    enum class Status: uint8_t {
+    enum struct Status: uint8_t {
         success             = 0x00,
         // modbus exceptions
         illegalFunction     = 0x01,
@@ -24,7 +24,7 @@ struct ModbusMaster {
         invalidCRC          = 0xE3,
     };
 
-    enum class Function: uint8_t {
+    enum struct Function: uint8_t {
         none                        = 0x00,
         // bit access
         readCoils                   = 0x01,
@@ -58,7 +58,7 @@ struct ModbusMaster {
     int receiveTimeoutID = 0;
     Function reqFunction = Function::none;
 
-    ModbusMaster(EventQueue* queue, Serial* serial, int baud, uint8_t slaveID, int timeout = 50):
+    inline ModbusMaster(EventQueue* queue, Serial* serial, int baud, uint8_t slaveID, int timeout = 50):
         queue(queue),
         serial(serial),
         slaveID(slaveID),
