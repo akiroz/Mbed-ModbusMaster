@@ -8,6 +8,35 @@ This project is inspired by the Arduino [ModbusMaster][] library by 4-20ma.
 
 [ModbusMaster]: https://github.com/4-20ma/ModbusMaster
 
+## Example
+
+Read registers:
+```cpp
+#include <mbed.h>
+#include <ModbusMaster.h>
+
+typedef ModbusMaster<16, 32> MBM;
+
+EventQueue queue;
+MBM modbus(&queue, PA_2, PA_3, 115200, 1);
+
+int main() {
+    modbus.readHoldingRegisters(1, 4, [](auto res){
+        if(res != MBM::Result::success) {
+            // Handle error
+        } else {
+            uint16_t* reg = modbus.getRegisters();
+            reg[0]; // => register 1 value
+            reg[1]; // => register 2 value
+            reg[2]; // => register 3 value
+            reg[3]; // => register 4 value
+        }
+    });
+    queue.dispatch_forever();
+    return 0;
+}
+```
+
 ## API
 
 #### `ModbusMaster<>()`
@@ -95,29 +124,4 @@ Modbus Write Single Register function.
 #### `void writeMultipleRegisters(uint16_t addr, uint16_t num, uint16_t* val, Callback<void(Result)>)`
 
 Modbus Write Multiple Registers function.
-
-## Example
-
-Read registers:
-```cpp
-typedef ModbusMaster<16, 32> MBM;
-EventQueue queue;
-MBM modbus(&queue, PA_2, PA_3, 115200, 1);
-
-int main() {
-    modbus.readHoldingRegisters(1, 4, [](auto res){
-        if(res != MBM::Result::success) {
-            // Handle error
-        } else {
-            uint16_t* reg = modbus.getRegisters();
-            reg[0]; // => register 1 value
-            reg[1]; // => register 2 value
-            reg[2]; // => register 3 value
-            reg[3]; // => register 4 value
-        }
-    });
-    queue.dispatch_forever();
-    return 0;
-}
-```
 
